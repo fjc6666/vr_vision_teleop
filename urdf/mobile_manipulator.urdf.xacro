@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="franka_ranger">
+
+    <xacro:include filename="$(find ranger_mini)/urdf/ranger_mini.xacro" />
+    <xacro:include filename="$(find franka_description)/robots/common/franka_robot.xacro"/>
+
+    <xacro:ranger_mini_robot />
+
+    <xacro:arg name="arm_id" default="fr3" />
+    
+    <xacro:franka_robot 
+        arm_id="$(arg arm_id)"
+        joint_limits="${xacro.load_yaml('$(find franka_description)/robots/fr3/joint_limits.yaml')}"
+        inertials="${xacro.load_yaml('$(find franka_description)/robots/fr3/inertials.yaml')}"
+        kinematics="${xacro.load_yaml('$(find franka_description)/robots/fr3/kinematics.yaml')}"
+        dynamics="${xacro.load_yaml('$(find franka_description)/robots/fr3/dynamics.yaml')}"
+        gazebo="false"
+        hand="true"
+        connected_to="arm_mount_link"
+        xyz="0 0 0"
+        rpy="0 0 0"
+    />
+
+    <joint name="chassis_to_arm_mount" type="fixed">
+        <parent link="chassis_link"/>
+        <child link="arm_mount_link"/>
+        <origin xyz="0 0 0.38" rpy="0 0 0"/>
+    </joint>
+
+</robot>

@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="franka_ranger">
+
+    <xacro:include filename="$(find ranger_mini)/urdf/ranger_mini.xacro" />
+
+    <xacro:include filename="$(find franka_description)/robots/fr3/fr3.urdf.xacro" />
+
+
+    <xacro:ranger_mini_robot />
+
+    <xacro:fr3 arm_id="fr3" hand="true" gazebo="true"/>
+
+
+    <joint name="ranger_to_franka_joint" type="fixed">
+        <parent link="base_link"/> 
+
+        <child link="fr3_link0"/>
+
+        <origin xyz="0 0 0.38" rpy="0 0 0"/>
+    </joint>
+
+</robot>
+

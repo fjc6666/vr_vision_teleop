@@ -1,0 +1,9 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 1000  # Hz
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    # 注意：这里我们还没配置复杂的轨迹控制器，先保证能读到状态
+    # 以后要做 MoveIt 的时候再加 joint_trajectory_controller

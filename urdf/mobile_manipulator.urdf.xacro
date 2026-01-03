@@ -2,29 +2,93 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="franka_ranger">
 
     <xacro:include filename="$(find ranger_mini)/urdf/ranger_mini.xacro" />
-    <xacro:include filename="$(find franka_description)/robots/common/franka_robot.xacro"/>
+    
+    <xacro:include filename="$(find franka_description)/end_effectors/common/utils.xacro" />
+    
+    <xacro:include filename="$(find franka_description)/robots/common/franka_arm.xacro"/>
+    <xacro:include filename="$(find franka_description)/end_effectors/common/franka_hand.xacro"/>
 
     <xacro:ranger_mini_robot />
 
     <xacro:arg name="arm_id" default="fr3" />
     
-    <xacro:franka_robot 
+    <xacro:franka_arm 
         arm_id="$(arg arm_id)"
+        connected_to="chassis_link"
+        xyz="0 0 0.04"
+        rpy="0 0 0"
         joint_limits="${xacro.load_yaml('$(find franka_description)/robots/fr3/joint_limits.yaml')}"
         inertials="${xacro.load_yaml('$(find franka_description)/robots/fr3/inertials.yaml')}"
         kinematics="${xacro.load_yaml('$(find franka_description)/robots/fr3/kinematics.yaml')}"
         dynamics="${xacro.load_yaml('$(find franka_description)/robots/fr3/dynamics.yaml')}"
-        gazebo="false"
-        hand="true"
-        connected_to="arm_mount_link"
-        xyz="0 0 0"
-        rpy="0 0 0"
+        gazebo="true" 
     />
 
-    <joint name="chassis_to_arm_mount" type="fixed">
-        <parent link="chassis_link"/>
-        <child link="arm_mount_link"/>
-        <origin xyz="0 0 0.04" rpy="0 0 0"/>
+    <joint name="mobile_base_arm_joint" type="fixed">
+        <parent link="chassis_link" />
+        <child link="$(arg arm_id)_link0" />
+        <origin xyz="0 0 0.04" rpy="0 0 0" />
     </joint>
+
+    <xacro:franka_hand
+        arm_id="$(arg arm_id)"
+        connected_to="$(arg arm_id)_link8"
+        ee_id="franka_hand"
+        ee_inertials="${xacro.load_yaml('$(find franka_description)/end_effectors/franka_hand/inertials.yaml')}"
+        gazebo="true"
+    />
+
+    <ros2_control name="FrankaGazeboSystem" type="system">
+        <hardware>
+            <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+        </hardware>
+
+        <xacro:macro name="configure_joint" params="joint_name initial_pos">
+            <joint name="${joint_name}">
+                <command_interface name="effort"/>
+                <command_interface name="velocity"/>
+                <command_interface name="position"/>
+                <state_interface name="position">
+                  <param name="initial_value">${initial_pos}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+                <state_interface name="effort"/>
+            </joint>
+        </xacro:macro>
+
+        <xacro:configure_joint joint_name="$(arg arm_id)_joint1" initial_pos="0.0"/>
+        <xacro:configure_joint joint_name="$(arg arm_id)_joint2" initial_pos="${-pi/4}"/>
+        <xacro:configure_joint joint_name="$(arg arm_id)_joint3" initial_pos="0.0"/>
+        <xacro:configure_joint joint_name="$(arg arm_id)_joint4" initial_pos="${-3*pi/4}"/>
+        <xacro:configure_joint joint_name="$(arg arm_id)_joint5" initial_pos="0.0"/>
+        <xacro:configure_joint joint_name="$(arg arm_id)_joint6" initial_pos="${pi/2}"/>
+        <xacro:configure_joint joint_name="$(arg arm_id)_joint7" initial_pos="${pi/4}"/>
+
+        <joint name="$(arg arm_id)_finger_joint1">
+            <command_interface name="position"/>
+            <state_interface name="position"><param name="initial_value">0.0</param></state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+        <joint name="$(arg arm_id)_finger_joint2">
+            <command_interface name="position"/>
+            <state_interface name="position"><param name="initial_value">0.0</param></state_interface>
+            <state_interface name="velocity"/>
+        </joint>
+    </ros2_control>
+
+    <gazebo>
+        <plugin name="ranger_mini_controller" filename="libgazebo_ros_planar_move.so">
+            <ros>
+                <namespace>/</namespace>
+                <remapping>cmd_vel:=cmd_vel</remapping>
+                <remapping>odom:=odom</remapping>
+            </ros>
+            <update_rate>100</update_rate>
+            <publish_rate>10</publish_rate>
+            <robot_base_frame>chassis_link</robot_base_frame>
+            <publish_odom>true</publish_odom>
+            <publish_odom_tf>true</publish_odom_tf>
+        </plugin>
+    </gazebo>
 
 </robot>
